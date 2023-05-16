@@ -18,3 +18,7 @@
 
 JWT는 웹 애플리케이션에서 인증과 권한 부여를 위해 널리 사용되는 표준화된 방법 중 하나입니다. 클라이언트가 인증 후 서버로부터 받은 JWT를 이용하여 계속적으로 요청을 보내고, 서버는 JWT를 검증하여 요청의
 유효성과 사용자의 권한을 확인할 수 있습니다.
+
+### Reference
+- [auth0](https://auth0.com/docs/secure/tokens/json-web-tokens)
+- [baeldung](https://www.baeldung.com/java-auth0-jwt)
