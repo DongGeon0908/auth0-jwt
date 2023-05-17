@@ -32,6 +32,69 @@ JWT(JavaScript Web Token)의 "claim"은 토큰에 포함되는 정보의 일부�
 - 비공개 클레임(Private Claims): 공개 클레임과 유사하지만, 미리 정의된 표준이나 공개적으로 알려진 클레임이 아닌 사용자 정의 데이터를 저장하기 위해 사용됩니다. 이러한 클레임은 서버와 클라이언트 간에
   협의되어야 합니다. 클레임은 토큰의 페이로드에 JSON 형식으로 인코딩되어 포함됩니다. JWT의 헤더와 페이로드는 Base64Url로 인코딩되고, 서명(옵션)이 추가되어 JWT를 형성합니다.
 
+### Code Example
+
+**application.yml**
+
+```yml
+auth:
+    jwt:
+        secret: 2436be3a13b3d5ade04a5f558ef8662dd38c1fcea855217d7755a27cf74402df1776b796e9a9f23ffb283c5d9f0c6d8502a62c1fe3e73c081caa938809a6d946
+```
+
+해당 값은 ` openssl rand -hex 64`을 통해 생성 가능
+
+**JwtConfig.kt**
+
+```kotlin
+@Configuration
+@ConfigurationProperties(prefix = "auth.jwt")
+@ConfigurationPropertiesBinding
+data class JwtConfig(
+    @field:NotBlank
+    var secret: String = "",
+    val issuer: String = "goofy.kim"
+)
+```
+
+**JwtService.kt**
+
+```kotlin
+@Service
+class JwtService(
+    private val jwtConfig: JwtConfig
+) {
+    private val jwtVerifier: JWTVerifier = JWT
+        .require(Algorithm.HMAC256(jwtConfig.secret))
+        .withIssuer("goofy.kim")
+        .build()
+
+    fun create(
+        expiredAt: LocalDateTime,
+        payloads: Map<String, String>
+    ): String {
+        return JWT.create()
+            .withIssuer(jwtConfig.issuer)
+            .withExpiresAt(Date.from(expiredAt.toInstant(ZoneOffset.of("+09:00"))))
+            .apply {
+                payloads.forEach { (key, value) ->
+                    this.withClaim(key, value)
+                }
+            }.sign(Algorithm.HMAC256(jwtConfig.secret))
+    }
+
+    fun <T> verify(token: String, typeRef: TypeReference<T>): T {
+        val payload = jwtVerifier.verify(token).payload.decodeBase64()
+        return mapper.readValue(payload, typeRef)
+    }
+
+    fun verify(token: String): Map<String, Any> {
+        val payload = jwtVerifier.verify(token).payload.decodeBase64()
+        return mapper.readValue(payload)
+    }
+}
+```
+
 ### Reference
 
 - [auth0](https://auth0.com/docs/secure/tokens/json-web-tokens)
