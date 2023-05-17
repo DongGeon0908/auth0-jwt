@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -35,5 +36,10 @@ class JwtService(
     fun <T> verify(token: String, typeRef: TypeReference<T>): T {
         val payload = jwtVerifier.verify(token).payload.decodeBase64()
         return mapper.readValue(payload, typeRef)
+    }
+
+    fun verify(token: String): Map<String, Any> {
+        val payload = jwtVerifier.verify(token).payload.decodeBase64()
+        return mapper.readValue(payload)
     }
 }
